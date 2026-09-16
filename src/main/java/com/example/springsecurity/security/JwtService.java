@@ -28,21 +28,23 @@ public class JwtService {
        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+
+    //login
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("Roles", userDetails.getAuthorities()
+        claims.put("Roles", userDetails.getAuthorities() // take the role of user //[ GrantedAuthority("ROLE_ADMIN"), GrantedAuthority("ROLE_USER") ]
                 .stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(GrantedAuthority::getAuthority) // take of role ["ROLE_ADMIN", "ROLE_USER"]
         );
 
         return Jwts.builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .signWith(signingKey())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .compact();
+                .claims(claims) // Role
+                .subject(userDetails.getUsername()) // get from Username
+                .signWith(signingKey()) // throw for token
+                .issuedAt(new Date()) // Create token
+                .expiration(new Date(System.currentTimeMillis() + expiration)) // expiration tokend date
+                .compact(); //  prepare
     }
 
     public String extractUsername(String token) {
@@ -63,12 +65,15 @@ public class JwtService {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        // <T>  = Geric Type  // like list for store type
+        // T = return back for that type
+        // check for token , verity
         Claims claims = Jwts.parser()
-                .verifyWith(signingKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .verifyWith(signingKey()) // verify with Singinkey = check with token
+                .build() // prepare for create a full object
+                .parseSignedClaims(token) // or divide it 3 (Header.Payload.Signature) chheck for Signature
+                .getPayload(); //get data like admin for role
 
-        return claimsResolver.apply(claims);
+        return claimsResolver.apply(claims); // return back for that type
     }
 }
